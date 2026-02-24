@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neumann János</title>
+
+  <!-- class + id alapú selectorok -->
+  <style>
+    body{
+      margin:0;
+      font-family: "Times New Roman", Georgia, serif;
+      background:#ffffff;
+      color:#111;
+      line-height:1.45;
+    }
+
+    #page{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
+    }
+
+    #mainTitle{
+      text-align:center;
+      font-size:64px;
+      font-style: italic;
+      margin: 8px 0 6px;
+      letter-spacing: 0.5px;
+    }
+
+    #titleUnderline{
+      width: 520px;
+      height: 6px;
+      background:#111;
+      margin: 0 auto 22px;
+    }
+
+    .quoteWrap{
+      display:flex;
+      justify-content:flex-end;
+      margin: 0 6px 22px;
+    }
+
+    .quote{
+      max-width: 560px;
+      font-style: italic;
+      font-size: 18px;
+      text-align:right;
+      color:#222;
+    }
+
+    .quote .author{
+      display:block;
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    .lead{
+      font-size: 20px;
+      margin: 18px 0 18px;
+    }
+
+    .lead strong{
+      font-weight: 800;
+    }
+
+    .contentGrid{
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap: 26px;
+      align-items:start;
+      margin-top: 14px;
+    }
+
+    .infobox{
+      border: 2px solid #222;
+      border-radius: 6px;
+      background:#d9d9d9;
+      padding: 0;
+      overflow:hidden;
+      box-shadow: 0 0 0 0 rgba(0,0,0,0);
+    }
+
+    .infoboxHeader{
+      background:#7a7a7a;
+      color:#111;
+      text-align:center;
+      font-weight: 800;
+      padding: 10px 10px;
+      font-size: 20px;
+    }
+
+    .infoboxBody{
+      padding: 14px 14px 10px;
+    }
+
+    .portrait{
+      display:block;
+      width: 100%;
+      border: 6px solid #bdbdbd;
+      background:#bdbdbd;
+      box-sizing:border-box;
+      margin: 6px auto 14px;
+    }
+
+    .infoLine{
+      margin: 4px 0;
+      font-size: 18px;
+    }
+
+    .infoLine b{
+      font-weight: 800;
+    }
+
+    .schoolsTitle{
+      margin: 10px 0 6px;
+      font-size: 18px;
+    }
+
+    .schools{
+      margin: 0 0 0 22px;
+      font-size: 18px;
+    }
+
+    .schools li{ margin: 4px 0; }
+
+    .article p{
+      margin: 0 0 18px;
+      font-size: 20px;
+      text-align: justify;
+    }
+
+    .emph{
+      font-style: italic;
+      font-weight: 700;
+    }
+
+    /* apró “nyers” linkek ne rondítsanak */
+    a.cleanLink{ color:#111; text-decoration:none; }
+    a.cleanLink:hover{ text-decoration:underline; }
+  </style>
+</head>
+
+<body>
+  <main id="page">
+
+    <!-- inline CSS is van: a title extra “ráhúzása” -->
+    <h1 id="mainTitle" style="text-shadow: 0px 0px 0px #000;">Neumann János</h1>
+    <div id="titleUnderline"></div>
+
+    <section class="quoteWrap">
+      <blockquote class="quote" style="margin:0;">
+        “Young man, in mathematics you don't understand things.<br />
+        You just get used to them.”
+        <span class="author">John von Neumann</span>
+      </blockquote>
+    </section>
+
+    <p class="lead">
+      <strong>Margittai Neumann János</strong> (külföldön: <span class="emph">John von Neumann</span>,
+      született: Neumann János Lajos) (Budapest, 1903. december 28. - Washington, 1957. február 8.)
+      magyar születésű matematikus. Kvantummechanikai elméleti kutatásai mellett a digitális számítógép
+      elvi alapjainak lefektetésével vált ismertté.
+    </p>
+
+    <section class="contentGrid">
+
+      <!-- Bal oldali infobox -->
+      <aside class="infobox" id="bioCard">
+        <div class="infoboxHeader">Neumann János</div>
+
+        <div class="infoboxBody">
+          <img
+            class="portrait"
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/JohnvonNeumann-LosAlamos.jpg/462px-JohnvonNeumann-LosAlamos.jpg"
+            alt="Neumann János portré"
+            style="border-radius: 2px;"
+          />
+
+          <p class="infoLine"><b>Született:</b> 1903. december 28.</p>
+          <p class="infoLine"><b>Elhunyt:</b> 1957. február 8. (53 évesen)</p>
+          <p class="infoLine"><b>Ismeretes mint:</b> matematikus, informatikus, fizikus, egyetemi oktató</p>
+          <p class="infoLine"><b>Állampolgárság:</b> magyar, amerikai</p>
+
+          <p class="schoolsTitle"><b>Iskolái:</b></p>
+          <ul class="schools">
+            <li>Budapest-Fasori Evangélikus Gimnázium</li>
+            <li>Frigyes Vilmos Egyetem</li>
+            <li>Magyar Királyi Pázmány Péter Tudományegyetem</li>
+            <li>Zürichi Műegyetem</li>
+            <li>Göttingeni Egyetem</li>
+          </ul>
+        </div>
+      </aside>
+
+      <!-- Jobb oldali szöveg -->
+      <article class="article" id="mainText">
+        <p>
+          Neumann hatalmas hozzájárult a matematikához, a kvantummechanikához, a kvantumelmélethez,
+          a játékelmélethez, az ökonómiához és az informatikához. Számos olyan fogalom és elv fűződik a nevéhez,
+          mint például a <span class="emph">Neumann-elv</span> a kvantummechanikában,
+          a <span class="emph">Neumann-stabilitáselmélet</span> a játékelméletben, vagy a
+          <span class="emph">Neumann-eljárás</span> a numerikus analízisben.
+        </p>
+
+        <p>
+          A számítástechnikának Neumann János jelentős alakja, elsők között ismerte fel a digitális számítógépek potenciálját.
+          Neumann olyan alapvető koncepciókat és architektúrákat dolgozott ki, amelyek meghatározóak lettek a mai modern számítógépek
+          tervezésében és működésében. Nevéhez fűződik a
+          <span class="emph">"Neumann-architektúra"</span>, amely egy olyan számítógép-architektúra, amelyben a program és az adat
+          ugyanabban a memóriában található.
+        </p>
+
+        <p style="margin-bottom:0;">
+          Neumann János rendkívül sokoldalú tudós volt, és kutatásai óriási hatást gyakoroltak az informatika, a matematika és a tudomány
+          egyéb területeire. Munkássága és öröksége a mai napig hatással van a modern tudományos és technológiai fejlesztésekre.
+        </p>
+
+        <!-- inline CSS + link példa -->
+        <p style="margin-top:14px; font-size:16px; color:#333;">
+          Portré forrás:
+          <a class="cleanLink" href="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/JohnvonNeumann-LosAlamos.jpg/462px-JohnvonNeumann-LosAlamos.jpg"
+             target="_blank" rel="noopener"
+             style="font-weight:700;">
+            Wikimedia Commons
+          </a>
+        </p>
+      </article>
+
+    </section>
+  </main>
+</body>
+</html>
