@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git App - Repository adatlap</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container" style="margin-top: 20px;">
+        <h1 id="repo-name"></h1>
+        <p id="description"></p>
+        <p>
+            <strong>Owner:</strong>
+            <a id="owner-link"></a>
+        </p>
+        <p>
+            <strong>Homepage:</strong>
+            <a id="homepage" target="_blank"></a>
+        </p>
+
+        <div class="row">
+            <div class="col">
+                <h2>Fájlok</h2>
+                <table id="file-list">
+                    <thead>
+                        <tr>
+                            <th>Név</th>
+                            <th>Típus</th>
+                            <th>Méret</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
+            <div class="col">
+                <h2>Legutóbbi hibajegyek</h2>
+                <ul id="issues"></ul>
+
+                <div class="card" style="margin-top: 20px;">
+                    <h3>Új hibajegy nyitása</h3>
+                    <input type="text" id="new-issue-title" placeholder="Hiba címe">
+                    <textarea id="new-issue-body" rows="3" placeholder="Hiba leírása"></textarea>
+                    <button class="btn btn-primary" id="create-issue-btn">Létrehozás</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Betöltjük a navigációt (ez hiányzott!)
+        loadNavigation();
+
+        async function loadRepo(repoName) {
+            try {
+                const res = await fetch('https://api.github.com/repos/' + repoName, {
+                    headers: { 'Authorization': 'Bearer ' + GH_ACCESS_TOKEN }
+                });
+                if (!res.ok) throw Error('HTTP státusz: ' + res.status);
+
+                const data = await res.json();
+
+                document.querySelector('#repo-name').textContent = data.full_name;
+                document.querySelector('#description').textContent = data.description || 'Nincs leírás.';
+                
+                // 8. HÉTI INTEGRÁCIÓ: Link a tulajdonos adatlapjára
+                const ownerElem = document.querySelector('#owner-link');
+                ownerElem.textContent = data.owner.login;
+                ownerElem.setAttribute('href', `user.html?id=${data.owner.login}`);
+
+                const homepageElem = document.querySelector('#homepage');
+                if (data.homepage) {
+                    homepageElem.textContent = data.homepage;
+                    homepageElem.setAttribute('href', data.homepage);
+                } else {
+                    homepageElem.textContent = 'Nincs megadva';
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Hiba az adatbetöltés során: ' + err);
+            }
+        }
+
+        async function loadFileList(repoName) {
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repoName}/contents/`, {
+                    headers: { 'Authorization': 'Bearer ' + GH_ACCESS_TOKEN }
+                });
+                if (!res.ok) throw Error('HTTP státusz: ' + res.status);
+
+                const data = await res.json();
+                const tbody = document.querySelector('#file-list tbody');
+                tbody.innerHTML = '';
+                
+                for (const file of data) {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${file.name}</td>
+                            <td>${file.type}</td>
+                            <td>${file.type === 'file' ? file.size + ' bytes' : '-'}</td>
+                        </tr>
+                    `;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadIssues(repoName) {
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repoName}/issues?state=open`, {
+                    headers: { 'Authorization': 'Bearer ' + GH_ACCESS_TOKEN }
+                });
+                if (!res.ok) throw Error('HTTP státusz: ' + res.status);
+
+                const data = await res.json();
+                const issuesElem = document.querySelector('#issues');
+                issuesElem.innerHTML = '';
+                
+                for (const issue of data) {
+                    // Csak a valódi issue-kat jelenítjük meg (a pull requestek is ide jönnek néha)
+                    if (!issue.pull_request) {
+                        issuesElem.innerHTML += `
+                            <li>
+                                <a href="issue.html?repo=${repoName}&issue=${issue.number}">
+                                    #${issue.number} - ${issue.title}
+                                </a>
+                            </li>`;
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // 10. HÉTI ÚJDONSÁG: Hibajegy létrehozása (POST kérés)
+        async function createIssue(repoName) {
+            const titleInput = document.querySelector('#new-issue-title');
+            const bodyInput = document.querySelector('#new-issue-body');
+
+            if (!titleInput.value.trim()) {
+                alert('A cím megadása kötelező!');
+                return;
+            }
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repoName}/issues`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + GH_ACCESS_TOKEN,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: titleInput.value,
+                        body: bodyInput.value
+                    })
+                });
+
+                if (!res.ok) throw Error('Hiba a létrehozás során: ' + res.status);
+
+                alert('Hibajegy sikeresen létrehozva!');
+                titleInput.value = '';
+                bodyInput.value = '';
+                loadIssues(repoName); // Lista frissítése
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const repoName = params.get('name');
+
+        if (repoName) {
+            loadRepo(repoName);
+            loadFileList(repoName);
+            loadIssues(repoName);
+
+            document.querySelector('#create-issue-btn').addEventListener('click', () => createIssue(repoName));
+        }
+    </script>
+</body>
+</html>

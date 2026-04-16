@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git App - Új Repository</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="container" style="margin-top: 20px;">
+        <h1>Új Repository létrehozása</h1>
+        
+        <div class="card">
+            <form id="create-repo-form">
+                <div class="form-group">
+                    <label for="repo-name">Repository neve (kötelező):</label>
+                    <input type="text" id="repo-name" required placeholder="pl. elso-projekt-repo">
+                </div>
+
+                <div class="form-group">
+                    <label for="repo-desc">Leírás:</label>
+                    <textarea id="repo-desc" rows="3" placeholder="Rövid összefoglaló a projektről..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="repo-license">Licenc (választható):</label>
+                    <select id="repo-license">
+                        <option value="">Nincs (None)</option>
+                        <option value="mit">MIT License</option>
+                        <option value="apache-2.0">Apache License 2.0</option>
+                        <option value="gpl-3.0">GNU GPLv3</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>
+                        <input type="checkbox" id="repo-private" style="width: auto;"> Privát repository
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="margin-top: 20px;">Létrehozás</button>
+            </form>
+            <div id="status" style="margin-top: 15px;"></div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        // Betöltjük a navigációt az app.js-ből
+        loadNavigation();
+
+        const form = document.querySelector('#create-repo-form');
+        const statusDiv = document.querySelector('#status');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Megakadályozzuk az oldal újratöltését
+
+            // Adatok kinyerése az űrlapról
+            const name = document.querySelector('#repo-name').value;
+            const description = document.querySelector('#repo-desc').value;
+            const isPrivate = document.querySelector('#repo-private').checked;
+            const license = document.querySelector('#repo-license').value;
+
+            statusDiv.innerHTML = 'Létrehozás folyamatban...';
+            statusDiv.className = '';
+
+            try {
+                // HTTP POST kérés küldése a GitHub API-nak
+                const res = await fetch('https://api.github.com/user/repos', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + GH_ACCESS_TOKEN, // app.js-ből jön
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.github+json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description,
+                        private: isPrivate,
+                        auto_init: license !== "", // Ha van licenc, kell az inicializálás
+                        license_template: license || undefined
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    statusDiv.innerHTML = `Siker! A repository létrejött: <a href="${data.html_url}" target="_blank">${data.full_name}</a>`;
+                    statusDiv.style.color = 'green';
+                    form.reset();
+                } else {
+                    const errorData = await res.json();
+                    throw new Error(errorData.message || 'Ismeretlen hiba');
+                }
+            } catch (err) {
+                statusDiv.innerHTML = 'Hiba történt: ' + err.message;
+                statusDiv.style.color = 'red';
+                console.error(err);
+            }
+        });
+    </script>
+</body>
+</html>

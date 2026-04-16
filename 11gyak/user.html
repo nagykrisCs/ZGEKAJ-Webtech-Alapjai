@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Felhasználói Adatlap</title>
+    <style>
+        /* Alapvető esztétikai beállítások és reset */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f6f8fa;
+            color: #24292f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Profil kártya stílusa */
+        .profile-card {
+            background-color: #ffffff;
+            border: 1px solid #d0d7de;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Kép formázása */
+        .avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #f0f3f6;
+            margin-bottom: 15px;
+        }
+
+        /* Nevek és szövegek */
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+
+        .bio {
+            font-size: 14px;
+            color: #57606a;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        /* Adatok listája */
+        .details-container {
+            text-align: left;
+            background-color: #f6f8fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .detail-item {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .detail-item strong {
+            color: #24292f;
+        }
+
+        a {
+            color: #0969da;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .error, .loading {
+            color: #cf222e;
+            font-weight: bold;
+        }
+        .loading {
+            color: #0969da;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="profile-card" id="profile-card">
+        <p class="loading">Adatok betöltése...</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Query paraméter (id) kinyerése az URL-ből
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('id');
+            const cardElement = document.getElementById('profile-card');
+
+            // Ellenőrizzük, hogy van-e id paraméter
+            if (!userId) {
+                cardElement.innerHTML = '<p class="error">Hiba: Nincs megadva felhasználó az URL-ben! Használd így: user.html?id=microsoft</p>';
+                return;
+            }
+
+            // 2. Adatok lekérése a GitHub API-ról
+            fetch(`https://api.github.com/users/${userId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('A felhasználó nem található (404)');
+                    }
+                    return response.json();
+                })
+                .then(data => renderProfile(data))
+                .catch(error => {
+                    cardElement.innerHTML = `<p class="error">${error.message}</p>`;
+                });
+        });
+
+        // 3. Adatok megjelenítése és a null/üres string ellenőrzése
+        function renderProfile(user) {
+            const cardElement = document.getElementById('profile-card');
+            cardElement.innerHTML = ''; // Betöltés szöveg eltávolítása
+
+            // Segédfüggvény: ellenőrzi, hogy az adat nem null és nem üres sztring
+            const isValid = (value) => value !== null && value !== "";
+
+            // Avatar generálása
+            if (isValid(user.avatar_url)) {
+                cardElement.innerHTML += `<img src="${user.avatar_url}" alt="Avatar" class="avatar">`;
+            }
+
+            // Név generálása
+            if (isValid(user.name)) {
+                cardElement.innerHTML += `<h1>${user.name}</h1>`;
+            } else {
+                // Ha nincs neve, fallbackként megjelenítjük a login nevét
+                cardElement.innerHTML += `<h1>${user.login}</h1>`;
+            }
+
+            // Bio generálása
+            if (isValid(user.bio)) {
+                cardElement.innerHTML += `<p class="bio">"${user.bio}"</p>`;
+            }
+
+            // Egyéb részletek konténere
+            let detailsHtml = '<div class="details-container">';
+            
+            if (isValid(user.location)) {
+                detailsHtml += `<div class="detail-item"><strong>📍 Helyszín:</strong> ${user.location}</div>`;
+            }
+            
+            if (isValid(user.blog)) {
+                // Extra ellenőrzés, hogy kattintható link legyen akkor is, ha hiányzik a http://
+                let blogUrl = user.blog.startsWith('http') ? user.blog : `http://${user.blog}`;
+                detailsHtml += `<div class="detail-item"><strong>🔗 Weboldal:</strong> <a href="${blogUrl}" target="_blank">${user.blog}</a></div>`;
+            }
+
+            if (isValid(user.public_repos)) {
+                detailsHtml += `<div class="detail-item"><strong>📦 Publikus repók:</strong> ${user.public_repos} db</div>`;
+            }
+
+            if (isValid(user.followers)) {
+                detailsHtml += `<div class="detail-item"><strong>👥 Követők:</strong> ${user.followers} fő</div>`;
+            }
+
+            detailsHtml += '</div>';
+
+            // Ha van legalább egy adat a konténerben, hozzáadjuk a kártyához
+            if (detailsHtml !== '<div class="details-container"></div>') {
+                cardElement.innerHTML += detailsHtml;
+            }
+        }
+    </script>
+</body>
+</html>
