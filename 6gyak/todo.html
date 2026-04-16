@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teendő Lista</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Extra stílus az áthúzáshoz és a lista kinézetéhez */
+        .completed {
+            text-decoration: line-through;
+            color: #888;
+        }
+        #todo-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        #todo-list li {
+            padding: 10px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #todo-list li:hover {
+            background: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card" style="margin-top: 50px;">
+            <h2>Saját Teendőim</h2>
+            
+            <div class="row">
+                <div class="col-3">
+                    <input type="text" id="todo-input" placeholder="Mit tervezel mára?">
+                </div>
+                <div class="col">
+                    <button class="btn btn-primary" id="add-btn">Hozzáadás</button>
+                </div>
+            </div>
+
+            <ul id="todo-list">
+                </ul>
+        </div>
+    </div>
+
+    <script src="todo.js"></script>
+</body>
+</html>
