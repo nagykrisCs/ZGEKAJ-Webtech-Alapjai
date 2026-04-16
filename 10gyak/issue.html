@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git App - Issue</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main class="container" style="margin-top: 20px;">
+        <h3 id="title"></h3>
+
+        <div class="card">
+            <p id="user"></p>
+            <p id="body"></p>
+        </div>
+
+        <h4>Discussion</h4>
+        <div id="discussion"></div>
+
+        <div id="new-comment" class="card">
+            <label for="comment">Új komment írása:</label>
+            <textarea name="comment" id="comment" rows="5" placeholder="Írd ide a véleményed..."></textarea>
+            <button id="new-comment-btn" class="btn btn-primary">Küldés</button>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        // Hibakezelő segédfüggvények
+        function checkError(res) {
+            if (!res.ok) {
+                throw 'Váratlan hiba a szerveroldalon, státuszkód: ' + res.status;
+            }
+        }
+
+        function handleError(err) {
+            if (typeof err == 'string') {
+                alert(err);
+            }
+            console.error(err);
+        }
+
+        // Komment hozzáadása a felülethez (Data attribútum használata)
+        function addComment(comment) {
+            const discussionElem = document.querySelector('#discussion');
+            const commentHtml = `
+                <div class="card" data-id="${comment.id}">
+                    <strong>${comment.user.login} írta ${new Date(comment.created_at).toLocaleString()}-kor:</strong>
+                    <p class="comment-body">${comment.body}</p>
+                    <button class="btn btn-primary edit-btn">Szerkesztés</button>
+                    <button class="btn btn-danger delete-btn">Törlés</button>
+                </div>
+            `;
+            discussionElem.insertAdjacentHTML('beforeend', commentHtml);
+
+            // Eseménykezelők a szerkesztéshez és törléshez
+            const currentCard = document.querySelector(`.card[data-id="${comment.id}"]`);
+            
+            const editBtn = currentCard.querySelector('.edit-btn');
+            editBtn.addEventListener('click', () => editComment(repo, comment.id));
+
+            const deleteBtn = currentCard.querySelector('.delete-btn');
+            deleteBtn.addEventListener('click', () => deleteComment(repo, comment.id));
+        }
+
+        // Issue adatainak betöltése
+        async function loadIssue(repoName, issueNumber) {
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repoName}/issues/${issueNumber}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + GH_ACCESS_TOKEN
+                    }
+                });
+
+                checkError(res);
+                const issue = await res.json();
+
+                document.querySelector('#title').textContent = issue.title;
+                document.querySelector('#user').innerHTML = `<strong>${issue.user.login}</strong> írta ${new Date(issue.created_at).toLocaleString()}-kor:`;
+                
+                // JAVÍTVA: bodyElem használata a korábbi hiba helyett
+                const bodyElem = document.querySelector('#body');
+                bodyElem.innerHTML = issue.body || '<i>Nincs leírás.</i>';
+            } catch (err) {
+                handleError(err);
+            }
+        }
+
+        // Kommentek betöltése (Read)
+        async function loadComments(repoName, issueNumber) {
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repoName}/issues/${issueNumber}/comments`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + GH_ACCESS_TOKEN
+                    }
+                });
+
+                checkError(res);
+                const comments = await res.json();
+
+                for (const comment of comments) {
+                    addComment(comment);
+                }
+            } catch (err) {
+                handleError(err);
+            }
+        }
+
+        // Új komment küldése (HTTP POST)
+        async function createComment(repoName, issueNumber) {
+            const commentArea = document.querySelector('#comment');
+            const newCommentBody = commentArea.value.trim();
+
+            if (!newCommentBody) {
+                alert('A komment nem lehet üres!');
+                return;
+            }
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repoName}/issues/${issueNumber}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + GH_ACCESS_TOKEN,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ body: newCommentBody })
+                });
+                
+                checkError(res);
+                const comment = await res.json();
+                addComment(comment);
+                commentArea.value = ''; // Mező ürítése
+            } catch(err) {
+                handleError(err);
+            }
+        }
+
+        // Komment módosítása (HTTP PATCH)
+        async function editComment(repoName, commentId) {
+            try {
+                const commentBodyElem = document.querySelector(`.card[data-id="${commentId}"]>.comment-body`);
+                const currentText = commentBodyElem.textContent;
+                const updatedText = prompt('Komment szerkesztése:', currentText);
+
+                if (updatedText === null || updatedText.trim() === "") return;
+
+                const res = await fetch(`https://api.github.com/repos/${repoName}/issues/comments/${commentId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': 'Bearer ' + GH_ACCESS_TOKEN,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ body: updatedText })
+                });
+
+                checkError(res);
+                const comment = await res.json();
+                commentBodyElem.textContent = comment.body;
+            } catch (err) {
+                handleError(err);
+            }
+        }
+
+        // Komment törlése (HTTP DELETE)
+        async function deleteComment(repoName, commentId) {
+            if (!confirm('Biztosan törölni szeretnéd ezt a hozzászólást?')) return;
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repoName}/issues/comments/${commentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + GH_ACCESS_TOKEN
+                    }
+                });
+
+                if (!res.ok) {
+                    alert('Hiba a törlés során.');
+                    return;
+                }
+
+                // Elem eltávolítása a DOM-ból a data-id alapján
+                const commentCard = document.querySelector(`.card[data-id="${commentId}"]`);
+                if (commentCard) {
+                    commentCard.remove();
+                }
+            } catch (err) {
+                handleError(err);
+            }
+        }
+
+        // Inicializálás az URL paraméterek alapján
+        const params = new URLSearchParams(window.location.search);
+        const repo = params.get('repo');
+        const issue = params.get('issue');
+
+        if (repo && issue) {
+            loadIssue(repo, issue);
+            loadComments(repo, issue);
+
+            const newCommentBtn = document.querySelector('#new-comment-btn');
+            newCommentBtn.addEventListener('click', () => createComment(repo, issue));
+        } else {
+            alert('Hiányzó repo vagy issue paraméter!');
+        }
+    </script>
+</body>
+
+</html>
