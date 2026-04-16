@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub felhasználó keresés</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #60a5fa;
+      --border: #334155;
+      --danger: #f87171;
+      --success: #34d399;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .nav {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .menu {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .menu a {
+      color: var(--text);
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      transition: 0.2s ease;
+    }
+
+    .menu a:hover,
+    .menu a.active {
+      border-color: rgba(96, 165, 250, 0.4);
+      background: rgba(96, 165, 250, 0.12);
+      color: white;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 20px 56px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      margin: 0;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 70ch;
+      line-height: 1.6;
+    }
+
+    .card {
+      background: rgba(17, 24, 39, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
+      padding: 22px;
+    }
+
+    form {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: end;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    input[type="text"] {
+      width: min(420px, 100%);
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      outline: none;
+      font-size: 1rem;
+    }
+
+    input[type="text"]:focus {
+      border-color: rgba(96, 165, 250, 0.8);
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
+    }
+
+    button {
+      padding: 14px 18px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); opacity: 0.9; }
+
+    .status {
+      margin-top: 16px;
+      min-height: 24px;
+      color: var(--muted);
+    }
+
+    .status.error { color: var(--danger); }
+    .status.success { color: var(--success); }
+
+    .results {
+      margin-top: 26px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .user-card {
+      background: rgba(31, 41, 55, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 20px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .user-card img {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid rgba(96, 165, 250, 0.25);
+      background: #0f172a;
+      display: block;
+      margin: 0 auto 14px;
+    }
+
+    .user-card h2 {
+      font-size: 1.1rem;
+      margin: 0;
+      word-break: break-word;
+    }
+
+    .hint {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .empty {
+      grid-column: 1 / -1;
+      padding: 24px;
+      text-align: center;
+      border: 1px dashed rgba(148, 163, 184, 0.25);
+      border-radius: 18px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="nav" aria-label="Főmenü">
+      <div class="brand">Web technológia alapjai</div>
+      <ul class="menu">
+        <li><a href="index.html">Kezdőlap</a></li>
+        <li><a href="user-search.html" class="active">Felhasználó keresés</a></li>
+        <li><a href="about.html">Névjegy</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>GitHub felhasználó keresés</h1>
+      <p>Adj meg egy felhasználónevet, majd a GitHub kereső API segítségével megjelenítem a találatokat névvel és profilképpel.</p>
+    </section>
+
+    <section class="card" aria-labelledby="search-title">
+      <h2 id="search-title">Keresés</h2>
+      <form id="searchForm" novalidate>
+        <div>
+          <label for="username">Felhasználónév</label>
+          <input id="username" name="username" type="text" placeholder="pl. octocat" autocomplete="off" />
+        </div>
+        <button type="submit">Keresés</button>
+      </form>
+      <div id="status" class="status" aria-live="polite"></div>
+      <p class="hint">Üres mező esetén a böngésző egy alert ablakban jelez hibát.</p>
+    </section>
+
+    <section aria-labelledby="results-title">
+      <h2 id="results-title" style="margin: 28px 0 14px;">Találatok</h2>
+      <div id="results" class="results"></div>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('searchForm');
+    const input = document.getElementById('username');
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+
+    function setStatus(message, type = '') {
+      statusEl.textContent = message;
+      statusEl.className = type ? `status ${type}` : 'status';
+    }
+
+    function renderResults(items) {
+      resultsEl.innerHTML = '';
+
+      if (!items.length) {
+        resultsEl.innerHTML = '<div class="empty">Nincs találat erre a keresésre.</div>';
+        return;
+      }
+
+      const fragment = document.createDocumentFragment();
+
+      items.forEach(user => {
+        const card = document.createElement('article');
+        card.className = 'user-card';
+
+        // ELTÁVOLÍTVA AZ <a> TAG, CSAK KÉP ÉS NÉV MARADT
+        card.innerHTML = `
+            <img src="${user.avatar_url}" alt="${user.login} profilképe">
+            <h2>${user.login}</h2>
+        `;
+
+        fragment.appendChild(card);
+      });
+
+      resultsEl.appendChild(fragment);
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const query = input.value.trim();
+
+      if (!query) {
+        alert('Adj meg egy felhasználónevet!');
+        input.focus();
+        return;
+      }
+
+      setStatus('Keresés folyamatban...', '');
+      resultsEl.innerHTML = '';
+
+      try {
+        const url = `https://api.github.com/search/users?q=${encodeURIComponent(query)}`;
+        const response = await fetch(url, {
+          headers: {
+            'Accept': 'application/vnd.github+json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`GitHub API hiba: ${response.status}`);
+        }
+
+        const data = await response.json();
+        renderResults(data.items || []);
+        setStatus(`Találatok száma: ${data.total_count ?? 0}`, 'success');
+      } catch (error) {
+        console.error(error);
+        setStatus('Hiba történt a keresés közben.', 'error');
+        resultsEl.innerHTML = '<div class="empty">Nem sikerült lekérni az adatokat.</div>';
+      }
+    });
+  </script>
+</body>
+</html>
